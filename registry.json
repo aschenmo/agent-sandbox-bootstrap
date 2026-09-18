@@ -6,7 +6,12 @@
     "description": "12合1全能科研与前沿情报引擎：聚合 arXiv预印本、PubMed、Semantic Scholar、OpenAlex、SciVerse、Unpaywall开放获取PDF、PubChem化学分子结构、Tavily、Brave、百度、知乎与维基百科，支持一键全文PDF直连与深度网页正文穿透",
     "path": "domains/deep_research/omni_search",
     "entrypoint": "scripts/search_omni.py",
-    "required_keys": ["BRAVE_SEARCH_API_KEY", "TAVILY_API_KEY", "PUBMED_API_KEY", "SEMANTIC_SCHOLAR_API_KEY"]
+    "required_keys": [
+      "BRAVE_SEARCH_API_KEY",
+      "TAVILY_API_KEY",
+      "PUBMED_API_KEY",
+      "SEMANTIC_SCHOLAR_API_KEY"
+    ]
   },
   {
     "id": "ima-skill",
@@ -15,7 +20,10 @@
     "description": "腾讯 IMA OpenAPI 统一技能：知识库检索、文献笔记存取、COS 文件上传与全流程文档问答",
     "path": "domains/deep_research/ima-skills",
     "entrypoint": "SKILL.md",
-    "required_keys": ["IMA_OPENAPI_CLIENTID", "IMA_OPENAPI_APIKEY"]
+    "required_keys": [
+      "IMA_OPENAPI_CLIENTID",
+      "IMA_OPENAPI_APIKEY"
+    ]
   },
   {
     "id": "academic_search",
@@ -24,7 +32,10 @@
     "description": "并发检索 PubMed、Semantic Scholar、OpenAlex 全球学术文献",
     "path": "domains/deep_research/academic_search",
     "entrypoint": "scripts/search_academic.py",
-    "required_keys": ["PUBMED_API_KEY", "SEMANTIC_SCHOLAR_API_KEY"]
+    "required_keys": [
+      "PUBMED_API_KEY",
+      "SEMANTIC_SCHOLAR_API_KEY"
+    ]
   },
   {
     "id": "nature-figure",
@@ -121,5 +132,17 @@
     "description": "学术数据假设检验、显著性分析 (p-value)、方差分析与统计合理性评估",
     "path": "domains/academic_scientific/nature-skills/skills/nature-statistics",
     "entrypoint": "SKILL.md"
+  },
+  {
+    "id": "deep-research-dossier",
+    "name": "通用多模态深度调研与工程方案研报系统",
+    "domain": "deep_research",
+    "description": "通用多模态深度调研与工程方案研报系统。具备“模糊需求逆向参数探测、空间遥感与地图接地、国标/行业规范检索、量化计算与程序化图纸生成、咨询级研报总装”五位一体闭环能力。",
+    "path": "domains/deep_research/deep-research-dossier",
+    "entrypoint": "SKILL.md",
+    "required_keys": [
+      "AMAP_API_KEY",
+      "BAIDU_MAP_AK"
+    ]
   }
 ]

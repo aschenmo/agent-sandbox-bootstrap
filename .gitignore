@@ -6,3 +6,7 @@
 
 # 仅允许受密码保护的密文文件
 !secrets.enc
+__pycache__/
+*.pyc
+*.pyo
+.installed
