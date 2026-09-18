@@ -1,0 +1,116 @@
+[
+  {
+    "id": "ima-skill",
+    "name": "腾讯 ima 知识库与笔记管理",
+    "domain": "deep_research",
+    "description": "腾讯 IMA OpenAPI 统一技能：知识库检索、文献笔记存取、COS 文件上传与全流程文档问答",
+    "path": "domains/deep_research/ima-skills",
+    "entrypoint": "SKILL.md",
+    "required_keys": ["IMA_OPENAPI_CLIENTID", "IMA_OPENAPI_APIKEY"]
+  },
+  {
+    "id": "academic_search",
+    "name": "学术文献跨库检索",
+    "domain": "deep_research",
+    "description": "并发检索 PubMed、Semantic Scholar、OpenAlex 全球学术文献",
+    "path": "domains/deep_research/academic_search",
+    "entrypoint": "scripts/search_academic.py",
+    "required_keys": ["PUBMED_API_KEY", "SEMANTIC_SCHOLAR_API_KEY"]
+  },
+  {
+    "id": "nature-figure",
+    "name": "Nature顶刊学术科研绘图",
+    "domain": "academic_scientific",
+    "description": "生成符合 Nature / Science / Cell 期刊规范的出版级高质量科研图表与数据可视化",
+    "path": "domains/academic_scientific/nature-skills/skills/nature-figure",
+    "entrypoint": "SKILL.md"
+  },
+  {
+    "id": "nature-paper2ppt",
+    "name": "学术论文转答辩汇报PPT",
+    "domain": "academic_scientific",
+    "description": "自动提取论文核心论点、实验数据与图表，生成学术答辩与汇报 PPT",
+    "path": "domains/academic_scientific/nature-skills/skills/nature-paper2ppt",
+    "entrypoint": "SKILL.md"
+  },
+  {
+    "id": "nature-paper-to-patent",
+    "name": "学术论文转国家发明专利",
+    "domain": "academic_scientific",
+    "description": "将已发表或未发表论文全自动改写为标准发明专利技术交底书与权利要求书",
+    "path": "domains/academic_scientific/nature-skills/skills/nature-paper-to-patent",
+    "entrypoint": "SKILL.md"
+  },
+  {
+    "id": "nature-literature-pipeline",
+    "name": "学术文献全自动分析流水线",
+    "domain": "academic_scientific",
+    "description": "批量文献解析、交叉比对、前沿趋势总结与结构化综述流水线",
+    "path": "domains/academic_scientific/nature-skills/skills/nature-literature-pipeline",
+    "entrypoint": "SKILL.md"
+  },
+  {
+    "id": "nature-writing",
+    "name": "Nature顶刊学术写作与重构",
+    "domain": "academic_scientific",
+    "description": "顶级英文学术论文逻辑重构、论证强化、摘要打磨与高水平学术写作",
+    "path": "domains/academic_scientific/nature-skills/skills/nature-writing",
+    "entrypoint": "SKILL.md"
+  },
+  {
+    "id": "nature-response",
+    "name": "审稿意见Point-by-Point专业回复",
+    "domain": "academic_scientific",
+    "description": "针对 SCI / 顶刊审稿人修改意见的逐条专业答辩信与实验补全说明撰写",
+    "path": "domains/academic_scientific/nature-skills/skills/nature-response",
+    "entrypoint": "SKILL.md"
+  },
+  {
+    "id": "nature-reviewer",
+    "name": "模拟顶刊同行评审缺陷审查",
+    "domain": "academic_scientific",
+    "description": "模拟 Nature / IEEE 严苛审稿人视角，对论文方法论、创新性与逻辑缺陷进行深度审查",
+    "path": "domains/academic_scientific/nature-skills/skills/nature-reviewer",
+    "entrypoint": "SKILL.md"
+  },
+  {
+    "id": "nature-polishing",
+    "name": "学术语言深度润色与语法纠错",
+    "domain": "academic_scientific",
+    "description": "消除中式英语表达、提升学术严谨性与句式流畅度的精细化润色",
+    "path": "domains/academic_scientific/nature-skills/skills/nature-polishing",
+    "entrypoint": "SKILL.md"
+  },
+  {
+    "id": "nature-paper-card",
+    "name": "论文图文摘要与速读卡片",
+    "domain": "academic_scientific",
+    "description": "提炼单篇论文的核心创新点、方法流与结论，生成卡片式速读报告",
+    "path": "domains/academic_scientific/nature-skills/skills/nature-paper-card",
+    "entrypoint": "SKILL.md"
+  },
+  {
+    "id": "nature-proposal-writer",
+    "name": "科研基金与项目申报书撰写",
+    "domain": "academic_scientific",
+    "description": "国家自然科学基金、重点研发计划等科研申报书立项依据与技术路线设计",
+    "path": "domains/academic_scientific/nature-skills/skills/nature-proposal-writer",
+    "entrypoint": "SKILL.md"
+  },
+  {
+    "id": "nature-citation",
+    "name": "学术引用分析与BibTeX导出",
+    "domain": "academic_scientific",
+    "description": "自动化文献引用格式化、DOI 校验与高精度 BibTeX 数据库导出",
+    "path": "domains/academic_scientific/nature-skills/skills/nature-citation",
+    "entrypoint": "SKILL.md"
+  },
+  {
+    "id": "nature-statistics",
+    "name": "科研实验统计学检验与验证",
+    "domain": "academic_scientific",
+    "description": "学术数据假设检验、显著性分析 (p-value)、方差分析与统计合理性评估",
+    "path": "domains/academic_scientific/nature-skills/skills/nature-statistics",
+    "entrypoint": "SKILL.md"
+  }
+]
