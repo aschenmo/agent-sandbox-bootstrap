@@ -1,5 +1,14 @@
 [
   {
+    "id": "omni_search",
+    "name": "全源前沿情报与学术文献统一检索引擎 (12合1)",
+    "domain": "deep_research",
+    "description": "12合1全能科研与前沿情报引擎：聚合 arXiv预印本、PubMed、Semantic Scholar、OpenAlex、SciVerse、Unpaywall开放获取PDF、PubChem化学分子结构、Tavily、Brave、百度、知乎与维基百科，支持一键全文PDF直连与深度网页正文穿透",
+    "path": "domains/deep_research/omni_search",
+    "entrypoint": "scripts/search_omni.py",
+    "required_keys": ["BRAVE_SEARCH_API_KEY", "TAVILY_API_KEY", "PUBMED_API_KEY", "SEMANTIC_SCHOLAR_API_KEY"]
+  },
+  {
     "id": "ima-skill",
     "name": "腾讯 ima 知识库与笔记管理",
     "domain": "deep_research",
