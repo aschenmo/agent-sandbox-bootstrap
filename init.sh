@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Agent Sandbox Master Bootstrap (OpenSSL AES-256-PBKDF2 安全解密与技能引擎)
+# Agent Sandbox Master Bootstrap (动静分离 · 自愈持久化 · OpenSSL 凭据安全引擎)
 # ==============================================================================
 set -e
 
@@ -8,15 +8,36 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BIN_DIR="${HOME}/.local/bin"
 mkdir -p "$BIN_DIR" /tmp/inputs /tmp/outputs
 
+# ------------------------------------------------------------------------------
+# 0. 自动固化与动静分离保障 (Auto-Persistence)
+# 若脚本在 /tmp 内存虚拟文件系统中被克隆，自动迁移至系统持久目录，根除重启丢失
+# ------------------------------------------------------------------------------
+PERSIST_TARGET="/opt/bootstrap"
+if [ "$SCRIPT_DIR" != "$PERSIST_TARGET" ] && [ "$SCRIPT_DIR" != "${HOME}/.agent-bootstrap" ]; then
+  if [ -w "/opt" ] || [ "$(id -u)" -eq 0 ]; then
+    echo "📦 检测到核心仓库运行于临时路径 ($SCRIPT_DIR)，自动固化至系统持久路径 $PERSIST_TARGET ..."
+    mkdir -p "$PERSIST_TARGET"
+    cp -rn "$SCRIPT_DIR"/* "$PERSIST_TARGET"/ 2>/dev/null || cp -r "$SCRIPT_DIR"/* "$PERSIST_TARGET"/ 2>/dev/null || true
+    SCRIPT_DIR="$PERSIST_TARGET"
+  else
+    USER_PERSIST="${HOME}/.agent-bootstrap"
+    echo "📦 检测到非 root 环境，自动固化至用户主目录持久路径 $USER_PERSIST ..."
+    mkdir -p "$USER_PERSIST"
+    cp -rn "$SCRIPT_DIR"/* "$USER_PERSIST"/ 2>/dev/null || cp -r "$SCRIPT_DIR"/* "$USER_PERSIST"/ 2>/dev/null || true
+    SCRIPT_DIR="$USER_PERSIST"
+  fi
+fi
+
 # 获取传入的主密码（优先使用第1个参数，其次读取环境变量 BOOTSTRAP_PASS）
 MASTER_KEY="${1:-$BOOTSTRAP_PASS}"
 
 echo "================================================================="
-echo "🚀 启动 Agent Sandbox 极速初始化流程 (Secure Armory)"
+echo "🚀 启动 Agent Sandbox 极速初始化流程 (动静分离与自愈安全架构)"
+echo "📍 核心技能库常驻路径: $SCRIPT_DIR"
 echo "================================================================="
 
 # ------------------------------------------------------------------------------
-# 1. 安全解密并加载环境变量
+# 1. 安全解密并加载环境变量（内存级防护，重启物理自毁）
 # ------------------------------------------------------------------------------
 echo "🔑 [1/3] 正在安全解密 API 凭证池..."
 
@@ -31,7 +52,7 @@ if [ -n "$MASTER_KEY" ] && [ -f "$SCRIPT_DIR/secrets.enc" ]; then
     set +a
     grep -qF "/tmp/env.sh" ~/.bashrc 2>/dev/null || echo "[ -f /tmp/env.sh ] && source /tmp/env.sh" >> ~/.bashrc
     grep -qF "/tmp/env.sh" ~/.profile 2>/dev/null || echo "[ -f /tmp/env.sh ] && source /tmp/env.sh" >> ~/.profile
-    echo "✅ [SUCCESS] 凭据解密成功，已安全载入沙箱上下文与 .env"
+    echo "✅ [SUCCESS] 凭据解密成功，已载入当前沙箱环境与 /tmp/env.sh"
   else
     echo "❌ [ERROR] 凭据解密失败！请检查输入的主密码是否正确。"
     unset MASTER_KEY BOOTSTRAP_PASS
@@ -58,24 +79,86 @@ if [ -f "$SCRIPT_DIR/.gitmodules" ]; then
 fi
 
 # ------------------------------------------------------------------------------
-# 3. 挂载全局 CLI 快捷命令 (load_skill)
+# 3. 安装自愈型 load_skill 全局 Launcher（彻底根除死软链接）
 # ------------------------------------------------------------------------------
-echo "⚡ [3/3] 注册 load_skill 全局命令至系统 PATH..."
+echo "⚡ [3/3] 安装 load_skill 自愈启动器至系统 PATH..."
 chmod +x "$SCRIPT_DIR/load_skill.sh"
 
-# 建立用户级软链接
+# 生成自愈型 Launcher 包装脚本（避免使用脆弱的指向 /tmp 的软链接）
+INSTALL_WRAPPER="/tmp/load_skill_launcher.sh"
+cat << 'EOF' > "$INSTALL_WRAPPER"
+#!/usr/bin/env bash
+# ==============================================================================
+# Agent Sandbox Skill Launcher (Self-Healing Dispatcher)
+# ==============================================================================
+CANDIDATE_DIRS=(
+  "${BOOTSTRAP_DIR}"
+  "/opt/bootstrap"
+  "${HOME}/.agent-bootstrap"
+  "/tmp/bootstrap"
+)
+
+RESOLVED_DIR=""
+for dir in "${CANDIDATE_DIRS[@]}"; do
+  if [ -n "$dir" ] && [ -f "$dir/load_skill.sh" ]; then
+    RESOLVED_DIR="$dir"
+    break
+  fi
+done
+
+if [ -z "$RESOLVED_DIR" ]; then
+  echo "❌ [Agent Sandbox Alert] 未在系统中检测到 agent-sandbox-bootstrap 技能库！"
+  echo "💡 请执行快速初始化命令："
+  echo "   [ -d /opt/bootstrap ] && bash /opt/bootstrap/init.sh \"[密码]\" || (git clone --depth=1 https://github.com/aschenmo/agent-sandbox-bootstrap.git /opt/bootstrap 2>/dev/null || git clone --depth=1 https://github.com/aschenmo/agent-sandbox-bootstrap.git ~/.agent-bootstrap) && ([ -d /opt/bootstrap ] && bash /opt/bootstrap/init.sh \"[密码]\" || bash ~/.agent-bootstrap/init.sh \"[密码]\")"
+  return 1 2>/dev/null || exit 1
+fi
+
+# 检查内存凭据状态（容器重启感知）
+if [ ! -f "/tmp/env.sh" ] && [ ! -f "$RESOLVED_DIR/.env" ]; then
+  echo "⚠️ [Agent Sandbox Notice] 沙箱容器可能曾被重启，内存凭据池 (/tmp/env.sh) 处于待激活状态。"
+  echo "💡 若当前技能依赖 API Key，请先补充密码极速激活：bash $RESOLVED_DIR/init.sh \"[密码]\""
+  echo "------------------------------------------------------------------"
+fi
+
+if [ -f "/tmp/env.sh" ] && [ -z "$GEMINI_API_KEY" ] && [ -z "$SILICONFLOW_API_KEY" ]; then
+  set -a
+  source /tmp/env.sh 2>/dev/null || true
+  set +a
+fi
+
+if [[ "${BASH_SOURCE[0]}" != "${0}" ]] || [ -n "$ZSH_EVAL_CONTEXT" ]; then
+  source "$RESOLVED_DIR/load_skill.sh" "$@"
+else
+  bash "$RESOLVED_DIR/load_skill.sh" "$@"
+  if [ $? -eq 0 ] && [ -n "$1" ]; then
+    echo "💡 [提示] 若需要将该技能的 Python/PATH 永久置入当前交互式 Shell，请使用: source load_skill $1"
+  fi
+fi
+EOF
+
+chmod +x "$INSTALL_WRAPPER"
+
+# 优先清理旧的死软链接或残存文件
 mkdir -p /usr/local/bin 2>/dev/null || true
-ln -sf "$SCRIPT_DIR/load_skill.sh" /usr/local/bin/load_skill 2>/dev/null || ln -sf "$SCRIPT_DIR/load_skill.sh" "$BIN_DIR/load_skill" 2>/dev/null || true
+rm -f /usr/local/bin/load_skill "$BIN_DIR/load_skill" 2>/dev/null || true
+cp -f "$INSTALL_WRAPPER" /usr/local/bin/load_skill 2>/dev/null || true
+cp -f "$INSTALL_WRAPPER" "$BIN_DIR/load_skill" 2>/dev/null || true
+chmod +x /usr/local/bin/load_skill 2>/dev/null || true
+chmod +x "$BIN_DIR/load_skill" 2>/dev/null || true
+rm -f "$INSTALL_WRAPPER"
 
 export PATH="$SCRIPT_DIR:$BIN_DIR:/usr/local/bin:$PATH"
-echo "export PATH=\"$SCRIPT_DIR:$BIN_DIR:/usr/local/bin:\$PATH\"" >> ~/.bashrc
-echo "alias load_skill='source $SCRIPT_DIR/load_skill.sh'" >> ~/.bashrc
+grep -qF "export PATH=\"/opt/bootstrap" ~/.bashrc 2>/dev/null || echo "export PATH=\"/opt/bootstrap:\$HOME/.agent-bootstrap:\$HOME/.local/bin:/usr/local/bin:\$PATH\"" >> ~/.bashrc
+grep -qF "alias load_skill='source load_skill'" ~/.bashrc 2>/dev/null || echo "alias load_skill='source load_skill'" >> ~/.bashrc
 
 echo "================================================================="
-echo "🎉 沙箱环境已就绪！输入 'load_skill' 即可按需加载业务模块。"
+echo "🎉 沙箱环境已就绪！核心库已常驻，load_skill 已进化为自愈启动器。"
+echo "💡 提示：容器重启后无需重新 git clone，仅需执行以下命令 0 秒唤醒："
+echo "   bash $SCRIPT_DIR/init.sh \"[主密码]\""
 echo "================================================================="
 echo "📚 当前可用技能库清单："
 if [ -f "$SCRIPT_DIR/registry.json" ]; then
   python3 -c "import json; data=json.load(open('$SCRIPT_DIR/registry.json')); print('\n'.join([f\"  • \033[1;32m{item['id']}\033[0m [\033[1;34m{item['domain']}\033[0m] : {item['description']}\" for item in data]))" 2>/dev/null || cat "$SCRIPT_DIR/registry.json"
 fi
 echo "================================================================="
+

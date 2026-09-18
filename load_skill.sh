@@ -37,6 +37,17 @@ if [ -z "$SKILL_DIR" ] || [ ! -d "$SKILL_DIR" ]; then
   return 1 2>/dev/null || exit 1
 fi
 
+# 自动同步已解密的环境变量凭据池
+if [ -f "/tmp/env.sh" ]; then
+  set -a
+  source /tmp/env.sh 2>/dev/null || true
+  set +a
+elif [ -f "$ROOT_DIR/.env" ]; then
+  set -a
+  source "$ROOT_DIR/.env" 2>/dev/null || true
+  set +a
+fi
+
 echo "🚀 [Skill Loader] 正在按需加载技能: $(basename "$SKILL_DIR") ..."
 
 # 1. 按需安装 Python 依赖（带安装缓存标记）
