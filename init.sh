@@ -24,10 +24,14 @@ if [ -n "$MASTER_KEY" ] && [ -f "$SCRIPT_DIR/secrets.enc" ]; then
   # 解密到 /tmp/env.sh，静默错误流防止任何明文或调用栈泄露
   if openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 -in "$SCRIPT_DIR/secrets.enc" -out /tmp/env.sh -pass pass:"$MASTER_KEY" 2>/dev/null; then
     chmod 600 /tmp/env.sh
+    cp -f /tmp/env.sh "$SCRIPT_DIR/.env" 2>/dev/null || true
+    [ -f "$SCRIPT_DIR/.env" ] && chmod 600 "$SCRIPT_DIR/.env"
     set -a
     source /tmp/env.sh
     set +a
-    echo "✅ [SUCCESS] 凭据解密成功，已安全载入沙箱上下文 (/tmp/env.sh)"
+    grep -qF "/tmp/env.sh" ~/.bashrc 2>/dev/null || echo "[ -f /tmp/env.sh ] && source /tmp/env.sh" >> ~/.bashrc
+    grep -qF "/tmp/env.sh" ~/.profile 2>/dev/null || echo "[ -f /tmp/env.sh ] && source /tmp/env.sh" >> ~/.profile
+    echo "✅ [SUCCESS] 凭据解密成功，已安全载入沙箱上下文与 .env"
   else
     echo "❌ [ERROR] 凭据解密失败！请检查输入的主密码是否正确。"
     unset MASTER_KEY BOOTSTRAP_PASS
