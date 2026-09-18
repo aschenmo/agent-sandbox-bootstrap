@@ -12,6 +12,7 @@ import os
 import sys
 import json
 import re
+import time
 import argparse
 import urllib.request
 import urllib.parse
@@ -346,7 +347,12 @@ def search_zhihu(query, limit=5):
     if zhihu_key:
         try:
             u = f"https://developer.zhihu.com/api/v1/content/zhihu_search?Query={urllib.parse.quote(query)}&Count={limit}"
-            req = urllib.request.Request(u, headers={"Authorization": f"Bearer {zhihu_key}", "User-Agent": "AntigravitySearch/2.0"})
+            req = urllib.request.Request(u, headers={
+                "Authorization": f"Bearer {zhihu_key}",
+                "X-Request-Timestamp": str(int(time.time())),
+                "Content-Type": "application/json",
+                "User-Agent": "AntigravitySearch/2.0"
+            })
             with urllib.request.urlopen(req, timeout=8) as resp:
                 data = json.loads(resp.read().decode())
                 items = []
