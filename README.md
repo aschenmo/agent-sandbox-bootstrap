@@ -11,8 +11,9 @@
 无论沙箱是**初次全新克隆安装**，还是**闲置超时重启后唤醒**，向 Agent 发送以下通用一行指令即可实现全自动智能识别与无缝激活：
 
 ```bash
-[ -d /opt/bootstrap ] && bash /opt/bootstrap/init.sh "YOUR_MASTER_PASSWORD" || (git clone --depth=1 https://github.com/aschenmo/agent-sandbox-bootstrap.git /opt/bootstrap 2>/dev/null || git clone --depth=1 https://github.com/aschenmo/agent-sandbox-bootstrap.git ~/.agent-bootstrap) && ([ -d /opt/bootstrap ] && bash /opt/bootstrap/init.sh "YOUR_MASTER_PASSWORD" || bash ~/.agent-bootstrap/init.sh "YOUR_MASTER_PASSWORD")
+[ -d /opt/bootstrap ] && BOOTSTRAP_PASS="YOUR_MASTER_PASSWORD" bash /opt/bootstrap/init.sh || (git clone --depth=1 https://github.com/aschenmo/agent-sandbox-bootstrap.git /opt/bootstrap 2>/dev/null || git clone --depth=1 https://github.com/aschenmo/agent-sandbox-bootstrap.git ~/.agent-bootstrap) && ([ -d /opt/bootstrap ] && BOOTSTRAP_PASS="YOUR_MASTER_PASSWORD" bash /opt/bootstrap/init.sh || BOOTSTRAP_PASS="YOUR_MASTER_PASSWORD" bash ~/.agent-bootstrap/init.sh)
 ```
+> **安全最佳实践**：采用 `BOOTSTRAP_PASS="..." bash ...` 传参，口令仅写入临时子进程内存环境，在 `ps aux` 进程树中隐身（避免 CWE-214 参数侦听）。若不提供口令，交互式终端将静默提示输入。
 
 ### 💡 核心自愈特性与动静分离架构：
 1. **静态代码与技能常驻（持久路径）**：

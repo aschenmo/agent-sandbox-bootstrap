@@ -112,9 +112,14 @@ echo "🔑 [2/4] 正在安全解密 API 凭证池..."
 if [ -f "$SCRIPT_DIR/secrets.enc" ]; then
   CANDIDATE_KEYS=()
   [ -n "$MASTER_KEY" ] && CANDIDATE_KEYS+=("$MASTER_KEY")
-  [ -n "$BOOTSTRAP_PASS" ] && CANDIDATE_KEYS+=("$BOOTSTRAP_PASS")
-  [ -f "/root/.bootstrap_token" ] && CANDIDATE_KEYS+=("$(cat /root/.bootstrap_token 2>/dev/null)")
-  [ -f "${HOME}/.agent-bootstrap/.token" ] && CANDIDATE_KEYS+=("$(cat "${HOME}/.agent-bootstrap/.token" 2>/dev/null)")
+  if [ -f "/root/.bootstrap_token" ]; then
+    chmod 600 "/root/.bootstrap_token" 2>/dev/null || true
+    CANDIDATE_KEYS+=("$(cat /root/.bootstrap_token 2>/dev/null)")
+  fi
+  if [ -f "${HOME}/.agent-bootstrap/.token" ]; then
+    chmod 600 "${HOME}/.agent-bootstrap/.token" 2>/dev/null || true
+    CANDIDATE_KEYS+=("$(cat "${HOME}/.agent-bootstrap/.token" 2>/dev/null)")
+  fi
 
   # 若非静默环境且未传入密码，允许终端交互输入
   if [ ${#CANDIDATE_KEYS[@]} -eq 0 ] && [ -t 0 ]; then
@@ -126,16 +131,25 @@ if [ -f "$SCRIPT_DIR/secrets.enc" ]; then
   DECRYPTED=0
   for cand in "${CANDIDATE_KEYS[@]}"; do
     [ -z "$cand" ] && continue
-    if openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 -in "$SCRIPT_DIR/secrets.enc" -out /tmp/env.sh -pass pass:"$cand" 2>/dev/null; then
+    # 采用 env: 传参模式，防止口令暴露于 ps aux / /proc/<PID>/cmdline 进程树 (CWE-214 防护)
+    export _BOOTSTRAP_MEM_PASS="$cand"
+    if openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 -in "$SCRIPT_DIR/secrets.enc" -out /tmp/env.sh -pass env:_BOOTSTRAP_MEM_PASS 2>/dev/null; then
       DECRYPTED=1
+      unset _BOOTSTRAP_MEM_PASS
       break
     fi
+    unset _BOOTSTRAP_MEM_PASS
   done
 
   if [ "$DECRYPTED" -eq 1 ]; then
+    # 仅落盘在内存虚拟文件系统 /tmp/env.sh (tmpfs)，绝不在 Git 源码工作区保留明文
     chmod 600 /tmp/env.sh
-    cp -f /tmp/env.sh "$SCRIPT_DIR/.env" 2>/dev/null || true
-    [ -f "$SCRIPT_DIR/.env" ] && chmod 600 "$SCRIPT_DIR/.env"
+    rm -f "$SCRIPT_DIR/.env" 2>/dev/null || true
+
+    # 用完即焚：擦除预挂载的临时 token 文件，杜绝多租户/非特权进程横向窥探 (CWE-732 防护)
+    [ -f "/root/.bootstrap_token" ] && (shred -u "/root/.bootstrap_token" 2>/dev/null || rm -f "/root/.bootstrap_token")
+    [ -f "${HOME}/.agent-bootstrap/.token" ] && (shred -u "${HOME}/.agent-bootstrap/.token" 2>/dev/null || rm -f "${HOME}/.agent-bootstrap/.token")
+
     set -a
     source /tmp/env.sh
     set +a
@@ -168,7 +182,7 @@ KAGGLE_EOF
     echo "✅ [SUCCESS] 凭据解密成功，已载入当前沙箱环境与 /tmp/env.sh"
   else
     echo "❌ [ERROR] 凭据解密失败！请检查输入的主密码是否正确。"
-    unset MASTER_KEY BOOTSTRAP_PASS
+    unset MASTER_KEY BOOTSTRAP_PASS CANDIDATE_KEYS input_pass _BOOTSTRAP_MEM_PASS cand
     exit 1
   fi
 elif [ -f "/tmp/env.sh" ]; then
@@ -180,8 +194,8 @@ else
   echo "⚠️ 未提供主密码或未检测到 secrets.enc，跳过私有 Key 解密。"
 fi
 
-# 立即销毁内存中的密码变量，防止子进程继承
-unset MASTER_KEY BOOTSTRAP_PASS
+# 立即销毁内存中的全部密码与候选凭证变量，防止子进程继承
+unset MASTER_KEY BOOTSTRAP_PASS CANDIDATE_KEYS input_pass _BOOTSTRAP_MEM_PASS cand
 
 # ------------------------------------------------------------------------------
 # 3. 自动同步 Git 子模块 (顶刊学术技能矩阵)

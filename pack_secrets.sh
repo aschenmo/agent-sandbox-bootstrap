@@ -35,7 +35,9 @@ if [ -z "$PASSWORD" ]; then
 fi
 
 echo "📦 正在使用 OpenSSL AES-256-PBKDF2 (100,000次加盐迭代) 打包凭据..."
-openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -salt -in "$ENV_FILE" -out "$OUTPUT_ENC" -pass pass:"$PASSWORD"
+export _PACK_MEM_PASS="$PASSWORD"
+openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -salt -in "$ENV_FILE" -out "$OUTPUT_ENC" -pass env:_PACK_MEM_PASS
+unset _PACK_MEM_PASS PASSWORD PASS1 PASS2
 chmod 644 "$OUTPUT_ENC"
 
 echo "✅ 打包完成: $OUTPUT_ENC"
