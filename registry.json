@@ -1,0 +1,255 @@
+[
+  {
+    "id": "omni_search",
+    "name": "全源前沿情报与学术文献统一检索引擎 (12合1)",
+    "domain": "deep_research",
+    "description": "12合1全能科研与前沿情报引擎：聚合 arXiv预印本、PubMed、Semantic Scholar、OpenAlex、SciVerse、Unpaywall开放获取PDF、PubChem化学分子结构、Tavily、Brave、百度、知乎与维基百科，支持一键全文PDF直连与深度网页正文穿透",
+    "path": "domains/deep_research/omni_search",
+    "entrypoint": "scripts/search_omni.py",
+    "required_keys": [
+      "BRAVE_SEARCH_API_KEY",
+      "TAVILY_API_KEY",
+      "PUBMED_API_KEY",
+      "SEMANTIC_SCHOLAR_API_KEY"
+    ]
+  },
+  {
+    "id": "ima-skill",
+    "name": "腾讯 ima 知识库与笔记管理",
+    "domain": "deep_research",
+    "description": "腾讯 IMA OpenAPI 统一技能：知识库检索、文献笔记存取、COS 文件上传与全流程文档问答",
+    "path": "domains/deep_research/ima-skills",
+    "entrypoint": "SKILL.md",
+    "required_keys": [
+      "IMA_OPENAPI_CLIENTID",
+      "IMA_OPENAPI_APIKEY"
+    ]
+  },
+  {
+    "id": "academic_search",
+    "name": "学术文献跨库检索",
+    "domain": "deep_research",
+    "description": "并发检索 PubMed、Semantic Scholar、OpenAlex 全球学术文献",
+    "path": "domains/deep_research/academic_search",
+    "entrypoint": "scripts/search_academic.py",
+    "required_keys": [
+      "PUBMED_API_KEY",
+      "SEMANTIC_SCHOLAR_API_KEY"
+    ]
+  },
+  {
+    "id": "nature-figure",
+    "name": "Nature顶刊学术科研绘图",
+    "domain": "academic_scientific",
+    "description": "生成符合 Nature / Science / Cell 期刊规范的出版级高质量科研图表与数据可视化",
+    "path": "domains/academic_scientific/nature-skills/skills/nature-figure",
+    "entrypoint": "SKILL.md"
+  },
+  {
+    "id": "nature-paper2ppt",
+    "name": "学术论文转答辩汇报PPT",
+    "domain": "academic_scientific",
+    "description": "自动提取论文核心论点、实验数据与图表，生成学术答辩与汇报 PPT",
+    "path": "domains/academic_scientific/nature-skills/skills/nature-paper2ppt",
+    "entrypoint": "SKILL.md"
+  },
+  {
+    "id": "nature-paper-to-patent",
+    "name": "学术论文转国家发明专利",
+    "domain": "academic_scientific",
+    "description": "将已发表或未发表论文全自动改写为标准发明专利技术交底书与权利要求书",
+    "path": "domains/academic_scientific/nature-skills/skills/nature-paper-to-patent",
+    "entrypoint": "SKILL.md"
+  },
+  {
+    "id": "nature-literature-pipeline",
+    "name": "学术文献全自动分析流水线",
+    "domain": "academic_scientific",
+    "description": "批量文献解析、交叉比对、前沿趋势总结与结构化综述流水线",
+    "path": "domains/academic_scientific/nature-skills/skills/nature-literature-pipeline",
+    "entrypoint": "SKILL.md"
+  },
+  {
+    "id": "nature-writing",
+    "name": "Nature顶刊学术写作与重构",
+    "domain": "academic_scientific",
+    "description": "顶级英文学术论文逻辑重构、论证强化、摘要打磨与高水平学术写作",
+    "path": "domains/academic_scientific/nature-skills/skills/nature-writing",
+    "entrypoint": "SKILL.md"
+  },
+  {
+    "id": "nature-response",
+    "name": "审稿意见Point-by-Point专业回复",
+    "domain": "academic_scientific",
+    "description": "针对 SCI / 顶刊审稿人修改意见的逐条专业答辩信与实验补全说明撰写",
+    "path": "domains/academic_scientific/nature-skills/skills/nature-response",
+    "entrypoint": "SKILL.md"
+  },
+  {
+    "id": "nature-reviewer",
+    "name": "模拟顶刊同行评审缺陷审查",
+    "domain": "academic_scientific",
+    "description": "模拟 Nature / IEEE 严苛审稿人视角，对论文方法论、创新性与逻辑缺陷进行深度审查",
+    "path": "domains/academic_scientific/nature-skills/skills/nature-reviewer",
+    "entrypoint": "SKILL.md"
+  },
+  {
+    "id": "nature-polishing",
+    "name": "学术语言深度润色与语法纠错",
+    "domain": "academic_scientific",
+    "description": "消除中式英语表达、提升学术严谨性与句式流畅度的精细化润色",
+    "path": "domains/academic_scientific/nature-skills/skills/nature-polishing",
+    "entrypoint": "SKILL.md"
+  },
+  {
+    "id": "nature-paper-card",
+    "name": "论文图文摘要与速读卡片",
+    "domain": "academic_scientific",
+    "description": "提炼单篇论文的核心创新点、方法流与结论，生成卡片式速读报告",
+    "path": "domains/academic_scientific/nature-skills/skills/nature-paper-card",
+    "entrypoint": "SKILL.md"
+  },
+  {
+    "id": "nature-proposal-writer",
+    "name": "科研基金与项目申报书撰写",
+    "domain": "academic_scientific",
+    "description": "国家自然科学基金、重点研发计划等科研申报书立项依据与技术路线设计",
+    "path": "domains/academic_scientific/nature-skills/skills/nature-proposal-writer",
+    "entrypoint": "SKILL.md"
+  },
+  {
+    "id": "nature-citation",
+    "name": "学术引用分析与BibTeX导出",
+    "domain": "academic_scientific",
+    "description": "自动化文献引用格式化、DOI 校验与高精度 BibTeX 数据库导出",
+    "path": "domains/academic_scientific/nature-skills/skills/nature-citation",
+    "entrypoint": "SKILL.md"
+  },
+  {
+    "id": "nature-statistics",
+    "name": "科研实验统计学检验与验证",
+    "domain": "academic_scientific",
+    "description": "学术数据假设检验、显著性分析 (p-value)、方差分析与统计合理性评估",
+    "path": "domains/academic_scientific/nature-skills/skills/nature-statistics",
+    "entrypoint": "SKILL.md"
+  },
+  {
+    "id": "deep-research-dossier",
+    "name": "通用多模态深度调研与工程方案研报系统",
+    "domain": "deep_research",
+    "description": "通用多模态深度调研与工程方案研报系统。具备“模糊需求逆向参数探测、空间遥感与地图接地、国标/行业规范检索、量化计算与程序化图纸生成、咨询级研报总装”五位一体闭环能力。",
+    "path": "domains/deep_research/deep-research-dossier",
+    "entrypoint": "SKILL.md",
+    "required_keys": [
+      "AMAP_API_KEY",
+      "BAIDU_MAP_AK"
+    ]
+  },
+  {
+    "id": "science-skills",
+    "name": "Google DeepMind 科研与生命科学工具集",
+    "domain": "academic_scientific",
+    "description": "Google DeepMind Science-Skills 深度科研与计算生物/化学工具集：整合 AlphaFold DB 3D结构预测、UniProt 蛋白质序列与功能注释、RCSB PDB 实验结构解析与 PubChem 分子药效团物理化学参数",
+    "path": "domains/academic_scientific/science-skills",
+    "entrypoint": "scripts/science_tools.py",
+    "dependencies": [
+      "requests",
+      "urllib3"
+    ]
+  },
+  {
+    "id": "graph-literature-retrieval",
+    "name": "异步图谱知识检索与文献拓扑推理系统",
+    "domain": "deep_research",
+    "description": "基于图谱的异步前沿文献知识挖掘系统：异步抓取多源论文（arXiv、OpenAlex、Semantic Scholar），自动化实体-关系抽取（方法、数据集、评价指标、结论），构建领域知识网络与引用拓扑图，支持最短推导路径分析与交互式知识图谱可视化 HTML 输出",
+    "path": "domains/deep_research/graph-literature-retrieval",
+    "entrypoint": "scripts/build_graph.py",
+    "dependencies": [
+      "networkx",
+      "urllib3"
+    ]
+  },
+  {
+    "id": "hpc-code-optimizer",
+    "name": "科研高性能计算与代码调优系统",
+    "domain": "academic_scientific",
+    "description": "科研高性能计算(HPC)与科学计算代码调优系统：自动分析 Python/PyTorch 科学计算代码的性能瓶颈与多重循环，提供向量化与内核融合加速建议，并一键生成生产级 SLURM 集群作业调度批处理脚本",
+    "path": "domains/academic_scientific/hpc-code-optimizer",
+    "entrypoint": "scripts/optimize_hpc.py",
+    "dependencies": [
+      "numpy"
+    ]
+  },
+  {
+    "id": "mcp-bridge",
+    "name": "Anthropic MCP 协议网关与客户端调度引擎",
+    "domain": "deep_research",
+    "description": "Anthropic Model Context Protocol (MCP) 官方标准协议网关与工具调用引擎：支持对接与调度任何本地/远程 Stdio MCP Server，内置 SQLite、目录树与安全数学求值工具，实现跨生态工具自由挂载",
+    "path": "domains/deep_research/mcp-bridge",
+    "entrypoint": "scripts/mcp_client.py",
+    "dependencies": []
+  },
+  {
+    "id": "code-interpreter-pro",
+    "name": "OpenAI 风格高级数据分析器",
+    "domain": "academic_scientific",
+    "description": "OpenAI 风格高级数据分析器 (Code Interpreter / ADA)：全自动探索性数据分析 (EDA)、统计指标度量、相关性分析与交互式数据大屏 HTML 自动总装",
+    "path": "domains/academic_scientific/code-interpreter-pro",
+    "entrypoint": "scripts/run_interpreter.py",
+    "dependencies": [
+      "pandas",
+      "numpy"
+    ]
+  },
+  {
+    "id": "gemini-multimodal-slicer",
+    "name": "Google Gemini 风格长音视频多模态切片器",
+    "domain": "deep_research",
+    "description": "Google Gemini 风格长音视频多模态时序切片器：基于原生 ffmpeg 引擎，定时/场景关键帧抓取、音轨高保真切片与带精确时间戳的 index.json 多模态索引生成",
+    "path": "domains/deep_research/gemini-multimodal-slicer",
+    "entrypoint": "scripts/slice_media.py",
+    "dependencies": []
+  },
+  {
+    "id": "headless-browser-operator",
+    "name": "类 Claude Computer Use 无头浏览器视觉交互引擎",
+    "domain": "deep_research",
+    "description": "类 Claude Computer Use 无头浏览器视觉与自动化交互引擎：基于 Playwright Chromium Headless，支持现代单页应用 (SPA) 动态渲染、高清全屏截图、DOM 元素智能交互（点击/表单填充/滚动）、控制台日志审计与自动化网页 PDF 导出",
+    "path": "domains/deep_research/headless-browser-operator",
+    "entrypoint": "scripts/headless_operator.py",
+    "dependencies": [
+      "playwright"
+    ]
+  },
+  {
+    "id": "pdf-docling-ocr",
+    "name": "类 Docling 顶刊文献视觉排版解析与 OCR 引擎",
+    "domain": "academic_scientific",
+    "description": "类 OpenAI / IBM Docling 顶刊学术文献视觉排版解析与 OCR 引擎：基于 PyMuPDF 深度版面分析，支持双栏排版智能顺序恢复、LaTeX 复杂数学公式识别与保护、多层级复杂表格 Markdown 还原与矢量/位图图表自动抽离",
+    "path": "domains/academic_scientific/pdf-docling-ocr",
+    "entrypoint": "scripts/parse_docling.py",
+    "dependencies": [
+      "pymupdf"
+    ]
+  },
+  {
+    "id": "ai-scientist-reviewer",
+    "name": "Sakana AI 风格自动化科研评审自检系统",
+    "domain": "academic_scientific",
+    "description": "Sakana AI 风格自动化科研创意与同行评审自检系统：面向学术论文、技术方案与实验代码，从立论逻辑、方法学新颖性、基线对比、消融严谨性等 8 个顶刊维度自动生成量化评审报告、致命漏洞攻击向量与交互式雷达图大屏",
+    "path": "domains/academic_scientific/ai-scientist-reviewer",
+    "entrypoint": "scripts/review_scientist.py",
+    "dependencies": [
+      "numpy"
+    ]
+  },
+  {
+    "id": "office-cli",
+    "name": "AI 原生 Office 全功能自动化套件 (OfficeCLI)",
+    "domain": "academic_scientific",
+    "description": "专为 AI Agent 设计的原生 Office 全功能套件：无需安装 Microsoft Office 或 LibreOffice 即可实现 DOCX/XLSX/PPTX 毫秒级创建、DOM 级精准编辑、公式自动求值、批量指令处理与无头 HTML/SVG 渲染预览",
+    "path": "domains/academic_scientific/office-cli",
+    "entrypoint": "scripts/office_helper.py",
+    "dependencies": []
+  }
+]

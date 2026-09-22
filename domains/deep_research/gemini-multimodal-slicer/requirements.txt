@@ -1,0 +1,1 @@
+# System dependencies: ffmpeg, ffprobe (standard pre-installed Linux utilities)

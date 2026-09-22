@@ -1,0 +1,1 @@
+# officecli is a self-contained native binary. No extra python dependencies required.
