@@ -44,70 +44,9 @@ echo "📍 核心技能库常驻路径: $SCRIPT_DIR"
 echo "================================================================="
 
 # ------------------------------------------------------------------------------
-# 1. 优先就绪核心 CLI 工具链与无头浏览器运行环境
-#    (GitHub CLI, Cloudflare Wrangler, Vercel, Kaggle, OfficeCLI, Headless Google Chrome)
+# 1. 第一优先级：安全解密并加载环境变量凭据池 (0 秒急速就绪)
 # ------------------------------------------------------------------------------
-echo "🛠️ [1/4] 优先检测并就绪核心生产力 CLI 与无头 Chrome 环境..."
-
-# 1.1 GitHub CLI (gh)
-if ! command -v gh &>/dev/null; then
-  echo "  ⬇️ 正在安装 GitHub CLI (gh)..."
-  GH_TAG=$(curl -s https://api.github.com/repos/cli/cli/releases/latest 2>/dev/null | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/' || echo "2.101.0")
-  [ -z "$GH_TAG" ] && GH_TAG="2.101.0"
-  (curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_TAG}/gh_${GH_TAG}_linux_amd64.tar.gz" -o /tmp/gh.tar.gz 2>/dev/null && \
-   tar -xzf /tmp/gh.tar.gz -C /tmp && \
-   cp /tmp/gh_${GH_TAG}_linux_amd64/bin/gh /usr/local/bin/gh && \
-   chmod +x /usr/local/bin/gh && \
-   rm -rf /tmp/gh*) || true
-fi
-
-# 1.2 Cloudflare CLI (wrangler)
-if ! command -v wrangler &>/dev/null; then
-  echo "  ⬇️ 正在全局安装 Cloudflare Wrangler CLI..."
-  npm install -g wrangler --silent 2>/dev/null || true
-fi
-
-# 1.3 Vercel CLI (vercel / vc)
-if ! command -v vercel &>/dev/null; then
-  if [ -f "/usr/share/npm-global/bin/vercel" ]; then
-    ln -sf /usr/share/npm-global/bin/vercel /usr/local/bin/vercel 2>/dev/null || true
-  else
-    echo "  ⬇️ 正在全局安装 Vercel CLI..."
-    npm install -g vercel --silent 2>/dev/null || true
-  fi
-fi
-
-# 1.4 Kaggle CLI (kaggle)
-if ! command -v kaggle &>/dev/null; then
-  echo "  ⬇️ 正在安装 Kaggle CLI..."
-  pip3 install --break-system-packages --quiet kaggle 2>/dev/null || true
-fi
-
-# 1.5 OfficeCLI (officecli - AI 原生 DOCX/XLSX/PPTX 套件)
-if ! command -v officecli &>/dev/null; then
-  echo "  ⬇️ 正在安装 OfficeCLI..."
-  (curl -fsSL "https://github.com/iOfficeAI/OfficeCLI/releases/latest/download/officecli-linux-x64" -o /usr/local/bin/officecli 2>/dev/null && \
-   chmod +x /usr/local/bin/officecli) || true
-fi
-
-# 1.6 无头 Google Chrome 运行环境 (headless-browser-operator 技能依赖)
-if ! command -v google-chrome &>/dev/null && [ ! -f "/usr/bin/google-chrome" ] && [ ! -f "/usr/lib/google-chrome/google-chrome" ]; then
-  echo "  ⬇️ 正在配置无头 Google Chrome 运行环境..."
-  (apt-get update -qq 2>/dev/null && apt-get install -y --no-install-recommends google-chrome-stable 2>/dev/null) || true
-fi
-# 自动就绪中文字体库 (彻底解决无头浏览器截图中文出现方块/豆腐块/乱码问题)
-if ! fc-list : lang=zh | grep -q . 2>/dev/null; then
-  echo "  ⬇️ 正在安装中文字体库 (WenQuanYi Micro Hei & Zen Hei)..."
-  (apt-get update -qq 2>/dev/null && apt-get install -y --no-install-recommends fonts-wqy-microhei fonts-wqy-zenhei 2>/dev/null && fc-cache -f 2>/dev/null) || true
-fi
-export CHROME_PATH="${CHROME_PATH:-/usr/bin/google-chrome}"
-export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD="1"
-pip3 install --break-system-packages --quiet playwright 2>/dev/null || true
-
-# ------------------------------------------------------------------------------
-# 2. 安全解密并加载环境变量（内存级防护，重启物理自毁）
-# ------------------------------------------------------------------------------
-echo "🔑 [2/4] 正在安全解密 API 凭证池..."
+echo "🔑 [1/3] 优先安全解密 API 凭证池并注入沙箱环境..."
 
 if [ -f "$SCRIPT_DIR/secrets.enc" ]; then
   CANDIDATE_KEYS=()
@@ -198,20 +137,11 @@ fi
 unset MASTER_KEY BOOTSTRAP_PASS CANDIDATE_KEYS input_pass _BOOTSTRAP_MEM_PASS cand
 
 # ------------------------------------------------------------------------------
-# 3. 自动同步 Git 子模块 (顶刊学术技能矩阵)
+# 2. 安装自愈型 load_skill 全局 Launcher（彻底根除死软链接）
 # ------------------------------------------------------------------------------
-if [ -f "$SCRIPT_DIR/.gitmodules" ]; then
-  echo "🔄 [3/4] 正在同步学术技能子模块..."
-  (cd "$SCRIPT_DIR" && git submodule update --init --recursive 2>/dev/null) || true
-fi
-
-# ------------------------------------------------------------------------------
-# 4. 安装自愈型 load_skill 全局 Launcher（彻底根除死软链接）
-# ------------------------------------------------------------------------------
-echo "⚡ [4/4] 安装 load_skill 自愈启动器至系统 PATH..."
+echo "⚡ [2/3] 安装 load_skill 自愈启动器至系统 PATH..."
 chmod +x "$SCRIPT_DIR/load_skill.sh"
 
-# 生成自愈型 Launcher 包装脚本（避免使用脆弱的指向 /tmp 的软链接）
 INSTALL_WRAPPER="/tmp/load_skill_launcher.sh"
 cat << 'EOF' > "$INSTALL_WRAPPER"
 #!/usr/bin/env bash
@@ -278,8 +208,54 @@ export PATH="$SCRIPT_DIR:$BIN_DIR:/usr/local/bin:$PATH"
 grep -qF "export PATH=\"/opt/bootstrap" ~/.bashrc 2>/dev/null || echo "export PATH=\"/opt/bootstrap:\$HOME/.agent-bootstrap:\$HOME/.local/bin:/usr/local/bin:\$PATH\"" >> ~/.bashrc
 grep -qF "alias load_skill='source load_skill'" ~/.bashrc 2>/dev/null || echo "alias load_skill='source load_skill'" >> ~/.bashrc
 
+# ------------------------------------------------------------------------------
+# 3. 核心工具链极速就绪 (轻量同步就绪 + 重型生态后台异步预热，绝不阻塞握手)
+# ------------------------------------------------------------------------------
+echo "🛠️ [3/3] 就绪核心工具链与运行时生态..."
+
+# 3.1 GitHub CLI (gh - 快速检测并就绪)
+if ! command -v gh &>/dev/null; then
+  (curl -fsSL "https://github.com/cli/cli/releases/download/v2.101.0/gh_2.101.0_linux_amd64.tar.gz" -o /tmp/gh.tar.gz 2>/dev/null && \
+   tar -xzf /tmp/gh.tar.gz -C /tmp && \
+   cp /tmp/gh_2.101.0_linux_amd64/bin/gh /usr/local/bin/gh && \
+   chmod +x /usr/local/bin/gh && \
+   rm -rf /tmp/gh*) 2>/dev/null || true
+fi
+
+# 3.2 OfficeCLI (快速检测并就绪)
+if ! command -v officecli &>/dev/null; then
+  (curl -fsSL "https://github.com/iOfficeAI/OfficeCLI/releases/latest/download/officecli-linux-x64" -o /usr/local/bin/officecli 2>/dev/null && \
+   chmod +x /usr/local/bin/officecli) 2>/dev/null || true
+fi
+
+# 3.3 Kaggle CLI (pip 轻量安装)
+if ! command -v kaggle &>/dev/null; then
+  pip3 install --break-system-packages --quiet kaggle 2>/dev/null || true
+fi
+
+# 3.4 Git 子模块更新 (学术技能库增量)
+if [ -f "$SCRIPT_DIR/.gitmodules" ]; then
+  (cd "$SCRIPT_DIR" && git submodule update --init --recursive 2>/dev/null) || true
+fi
+
+# 3.5 无头 Chrome 与重型 CLI (后台静默预热，绝不阻塞沙箱握手返回)
+(
+  # Cloudflare Wrangler & Vercel
+  command -v wrangler &>/dev/null || npm install -g wrangler --silent 2>/dev/null || true
+  command -v vercel &>/dev/null || npm install -g vercel --silent 2>/dev/null || true
+  
+  # 无头 Google Chrome & 中文字体
+  if ! command -v google-chrome &>/dev/null && [ ! -f "/usr/bin/google-chrome" ]; then
+    (apt-get update -qq 2>/dev/null && apt-get install -y --no-install-recommends google-chrome-stable fonts-wqy-microhei fonts-wqy-zenhei 2>/dev/null && fc-cache -f 2>/dev/null) || true
+  fi
+  pip3 install --break-system-packages --quiet playwright 2>/dev/null || true
+) &>/dev/null &
+
+export CHROME_PATH="${CHROME_PATH:-/usr/bin/google-chrome}"
+export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD="1"
+
 echo "================================================================="
-echo "🎉 沙箱环境已就绪！核心库已常驻，load_skill 已进化为自愈启动器。"
+echo "🎉 沙箱环境已秒级就绪！核心凭证池已解密，load_skill 已全面激活。"
 echo "💡 提示：容器重启后无需重新 git clone，仅需执行以下命令 0 秒唤醒："
 echo "   bash $SCRIPT_DIR/init.sh \"[主密码]\""
 echo "================================================================="
