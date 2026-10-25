@@ -250,9 +250,15 @@ if ! command -v kaggle &>/dev/null; then
   pip3 install --break-system-packages --quiet kaggle 2>/dev/null || true
 fi
 
-# 3.4 Git 子模块更新 (学术技能库增量)
-if [ -f "$SCRIPT_DIR/.gitmodules" ]; then
-  (cd "$SCRIPT_DIR" && git submodule update --init --recursive 2>/dev/null) || true
+# 3.4 顶刊学术技能矩阵 (nature-skills) 就绪与增量同步 (多重容错兜底)
+NATURE_SKILLS_DIR="$SCRIPT_DIR/domains/academic_scientific/nature-skills"
+if [ ! -d "$NATURE_SKILLS_DIR/skills" ]; then
+  echo "📥 正在就绪顶刊学术套件 (nature-skills)..."
+  mkdir -p "$(dirname "$NATURE_SKILLS_DIR")"
+  (cd "$SCRIPT_DIR" && git submodule update --init --recursive 2>/dev/null) || \
+  git clone --depth=1 https://github.com/Yuan1z0825/nature-skills.git "$NATURE_SKILLS_DIR" 2>/dev/null || true
+elif [ -d "$NATURE_SKILLS_DIR/.git" ]; then
+  (cd "$NATURE_SKILLS_DIR" && git pull --ff-only 2>/dev/null) || true
 fi
 
 # 3.5 无头 Chrome 与重型 CLI (后台静默预热，绝不阻塞沙箱握手返回)

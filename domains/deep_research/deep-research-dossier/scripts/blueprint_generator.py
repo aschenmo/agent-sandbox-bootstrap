@@ -6,6 +6,7 @@ Architectural Blueprint Generator (建筑平面图矢量生成引擎)
 """
 
 import os
+import sys
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.path import Path
@@ -266,8 +267,10 @@ def draw_roof_plan(output_path: str):
     print(f"Roof plan saved: {output_path}")
 
 if __name__ == "__main__":
-    out_dir = "/home/chenmo/.gemini/antigravity-cli/brain/9e8680b1-89fa-484e-9eea-fcd3f333fbc9"
-    draw_master_plan(f"{out_dir}/plan_master_30x10.png")
-    draw_first_floor_plan(f"{out_dir}/plan_1f_30x10.png")
-    draw_second_floor_plan(f"{out_dir}/plan_2f_30x10.png")
-    draw_roof_plan(f"{out_dir}/plan_roof_30x10.png")
+    out_dir = sys.argv[1] if len(sys.argv) > 1 else "/tmp/blueprints"
+    os.makedirs(out_dir, exist_ok=True)
+    draw_master_plan(os.path.join(out_dir, "plan_master_30x10.png"))
+    draw_first_floor_plan(os.path.join(out_dir, "plan_1f_30x10.png"))
+    draw_second_floor_plan(os.path.join(out_dir, "plan_2f_30x10.png"))
+    draw_roof_plan(os.path.join(out_dir, "plan_roof_30x10.png"))
+    print(f"All 4 blueprints generated successfully in: {out_dir}")

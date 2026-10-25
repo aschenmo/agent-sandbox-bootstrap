@@ -7,6 +7,24 @@ const path = require('path');
 const DEFAULT_BASE_URL = 'https://ima.qq.com';
 const DEFAULT_LAST_CHECK_FILE = path.join(os.homedir(), '.config/ima/last_update_check');
 
+// 全局代理感知与穿透支持 (兼容沙箱 HTTP_PROXY / HTTPS_PROXY 环境)
+const proxyEnv =
+  process.env.HTTPS_PROXY ||
+  process.env.https_proxy ||
+  process.env.HTTP_PROXY ||
+  process.env.http_proxy ||
+  process.env.ALL_PROXY ||
+  process.env.all_proxy;
+
+if (proxyEnv) {
+  try {
+    const { EnvHttpProxyAgent, setGlobalDispatcher } = require('undici');
+    setGlobalDispatcher(new EnvHttpProxyAgent());
+  } catch (e) {
+    // 若当前未安装 undici，在 postJson 内部自动回退到原生 http/https 隧道请求
+  }
+}
+
 // Only two categories of errors:
 //   -100: programmatic error (bad args, missing credentials, network, etc.)
 //   -200: skill update available
@@ -61,21 +79,66 @@ function loadSkillVersion(options = {}) {
   }
 }
 
+function postJsonNativeHttp(urlStr, payload, headers) {
+  return new Promise((resolve, reject) => {
+    const https = require('https');
+    const http = require('http');
+    const url = new URL(urlStr);
+    const client = url.protocol === 'http:' ? http : https;
+    const req = client.request(
+      url,
+      {
+        method: 'POST',
+        headers: {
+          ...headers,
+          'Content-Length': Buffer.byteLength(payload),
+        },
+      },
+      (res) => {
+        let data = '';
+        res.setEncoding('utf8');
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+        res.on('end', () => {
+          resolve(data);
+        });
+      }
+    );
+    req.on('error', reject);
+    req.write(payload);
+    req.end();
+  });
+}
+
 async function postJson(apiPath, body, requestOptions) {
   const { clientId, apiKey, skillVersion, baseUrl } = requestOptions;
 
-  const res = await fetch(`${baseUrl}/${apiPath}`, {
-    method: 'POST',
-    headers: {
-      'ima-openapi-clientid': clientId,
-      'ima-openapi-apikey': apiKey,
-      'ima-openapi-ctx': `skill_version=${skillVersion}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
+  // 清洗 URL 路径，彻底消除多重斜杠 (如 https://ima.qq.com//openapi/...)
+  const cleanBase = String(baseUrl || DEFAULT_BASE_URL).replace(/\/+$/, '');
+  const cleanPath = String(apiPath || '').replace(/^\/+/, '');
+  const targetUrl = `${cleanBase}/${cleanPath}`;
 
-  return await res.text();
+  const headers = {
+    'ima-openapi-clientid': clientId,
+    'ima-openapi-apikey': apiKey,
+    'ima-openapi-ctx': `skill_version=${skillVersion}`,
+    'Content-Type': 'application/json',
+  };
+
+  const payload = JSON.stringify(body);
+
+  try {
+    const res = await fetch(targetUrl, {
+      method: 'POST',
+      headers,
+      body: payload,
+    });
+    return await res.text();
+  } catch (fetchErr) {
+    // 若 fetch 在特定沙箱代理环境下受阻，无缝降级到原生 http/https 模块请求 (天然兼容 global-agent)
+    return await postJsonNativeHttp(targetUrl, payload, headers);
+  }
 }
 
 function readToday() {
