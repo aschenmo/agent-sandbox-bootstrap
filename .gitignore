@@ -1,6 +1,8 @@
 # 忽略所有明文环境与私钥
 .env
 .env.*
+.token
+*.token
 *.log
 /tmp/
 

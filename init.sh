@@ -48,7 +48,15 @@ echo "================================================================="
 # ------------------------------------------------------------------------------
 echo "🔑 [1/3] 优先安全解密 API 凭证池并注入沙箱环境..."
 
-if [ -f "$SCRIPT_DIR/secrets.enc" ]; then
+# 若已存在内存凭据且未传入新密码，直接复用已挂载凭据
+if [ -z "$MASTER_KEY" ] && [ -f "/tmp/env.sh" ]; then
+  set -a
+  set +e
+  source /tmp/env.sh 2>/dev/null || true
+  set -e
+  set +a
+  echo "✅ [SUCCESS] 检测到会话内存凭据已激活 (/tmp/env.sh)，已直接复用"
+elif [ -f "$SCRIPT_DIR/secrets.enc" ]; then
   CANDIDATE_KEYS=()
   [ -n "$MASTER_KEY" ] && CANDIDATE_KEYS+=("$MASTER_KEY")
   if [ -f "/root/.bootstrap_token" ]; then
@@ -60,69 +68,78 @@ if [ -f "$SCRIPT_DIR/secrets.enc" ]; then
     CANDIDATE_KEYS+=("$(cat "${HOME}/.agent-bootstrap/.token" 2>/dev/null)")
   fi
 
-  # 若非静默环境且未传入密码，允许终端交互输入
-  if [ ${#CANDIDATE_KEYS[@]} -eq 0 ] && [ -t 0 ]; then
-    read -s -p "🔐 请输入凭据解密密码 (Master Password): " input_pass
+  # 仅在未通过参数传入且处于交互终端时允许输入（带 3 秒超时防无头环境挂起）
+  if [ ${#CANDIDATE_KEYS[@]} -eq 0 ] && [ "$#" -eq 0 ] && [ -t 0 ] && [ -z "$NON_INTERACTIVE" ] && [ -z "$CI" ]; then
+    read -t 3 -s -p "🔐 请输入凭据解密密码 (Master Password，3秒后自动跳过): " input_pass 2>/dev/null || true
     echo ""
     [ -n "$input_pass" ] && CANDIDATE_KEYS+=("$input_pass")
   fi
 
-  DECRYPTED=0
-  for cand in "${CANDIDATE_KEYS[@]}"; do
-    [ -z "$cand" ] && continue
-    # 采用 env: 传参模式，防止口令暴露于 ps aux / /proc/<PID>/cmdline 进程树 (CWE-214 防护)
-    export _BOOTSTRAP_MEM_PASS="$cand"
-    if openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 -in "$SCRIPT_DIR/secrets.enc" -out /tmp/env.sh -pass env:_BOOTSTRAP_MEM_PASS 2>/dev/null; then
-      DECRYPTED=1
+  # 无密码平滑降级（支持无密一键冷启动，绝不中断退出）
+  if [ ${#CANDIDATE_KEYS[@]} -eq 0 ]; then
+    echo "⚠️ [NOTICE] 未提供主密码或未挂载凭据 Token，跳过商业 API 凭据池解密。"
+    echo "💡 本地算法、开源模型、公共工具链与 load_skill 全套生态仍将完整激活。"
+    echo "💡 若后续需接入受保护的商业 API，可随时执行: bash $SCRIPT_DIR/init.sh \"[主密码]\""
+  else
+    DECRYPTED=0
+    for cand in "${CANDIDATE_KEYS[@]}"; do
+      [ -z "$cand" ] && continue
+      # 采用 env: 传参模式，防止口令暴露于 ps aux / /proc/<PID>/cmdline 进程树 (CWE-214 防护)
+      export _BOOTSTRAP_MEM_PASS="$cand"
+      if openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 -in "$SCRIPT_DIR/secrets.enc" -out /tmp/env.sh -pass env:_BOOTSTRAP_MEM_PASS 2>/dev/null; then
+        DECRYPTED=1
+        unset _BOOTSTRAP_MEM_PASS
+        break
+      fi
       unset _BOOTSTRAP_MEM_PASS
-      break
-    fi
-    unset _BOOTSTRAP_MEM_PASS
-  done
+    done
 
-  if [ "$DECRYPTED" -eq 1 ]; then
-    # 仅落盘在内存虚拟文件系统 /tmp/env.sh (tmpfs)，绝不在 Git 源码工作区保留明文
-    chmod 600 /tmp/env.sh
-    rm -f "$SCRIPT_DIR/.env" 2>/dev/null || true
+    if [ "$DECRYPTED" -eq 1 ]; then
+      # 仅落盘在内存虚拟文件系统 /tmp/env.sh (tmpfs)，绝不在 Git 源码工作区保留明文
+      chmod 600 /tmp/env.sh
+      rm -f "$SCRIPT_DIR/.env" 2>/dev/null || true
 
-    # 用完即焚：擦除预挂载的临时 token 文件，杜绝多租户/非特权进程横向窥探 (CWE-732 防护)
-    [ -f "/root/.bootstrap_token" ] && (shred -u "/root/.bootstrap_token" 2>/dev/null || rm -f "/root/.bootstrap_token")
-    [ -f "${HOME}/.agent-bootstrap/.token" ] && (shred -u "${HOME}/.agent-bootstrap/.token" 2>/dev/null || rm -f "${HOME}/.agent-bootstrap/.token")
+      # 用完即焚：擦除预挂载的临时 token 文件，杜绝多租户/非特权进程横向窥探 (CWE-732 防护)
+      [ -f "/root/.bootstrap_token" ] && (shred -u "/root/.bootstrap_token" 2>/dev/null || rm -f "/root/.bootstrap_token")
+      [ -f "${HOME}/.agent-bootstrap/.token" ] && (shred -u "${HOME}/.agent-bootstrap/.token" 2>/dev/null || rm -f "${HOME}/.agent-bootstrap/.token")
 
-    set -a
-    source /tmp/env.sh
-    set +a
-    grep -qF "/tmp/env.sh" ~/.bashrc 2>/dev/null || echo "[ -f /tmp/env.sh ] && source /tmp/env.sh" >> ~/.bashrc
-    grep -qF "/tmp/env.sh" ~/.profile 2>/dev/null || echo "[ -f /tmp/env.sh ] && source /tmp/env.sh" >> ~/.profile
-    
-    # 自动关联 CLI 工具授权
-    if [ -n "$GH_TOKEN" ] && command -v gh &>/dev/null; then
-      echo "$GH_TOKEN" | gh auth login --with-token 2>/dev/null || true
-      gh auth setup-git 2>/dev/null || true
-    elif [ -n "$GITHUB_TOKEN" ] && command -v gh &>/dev/null; then
-      echo "$GITHUB_TOKEN" | gh auth login --with-token 2>/dev/null || true
-      gh auth setup-git 2>/dev/null || true
-    fi
+      set -a
+      set +e
+      source /tmp/env.sh 2>/dev/null || true
+      set -e
+      set +a
+      grep -qF "/tmp/env.sh" ~/.bashrc 2>/dev/null || echo "[ -f /tmp/env.sh ] && source /tmp/env.sh" >> ~/.bashrc
+      grep -qF "/tmp/env.sh" ~/.profile 2>/dev/null || echo "[ -f /tmp/env.sh ] && source /tmp/env.sh" >> ~/.profile
+      
+      # 自动关联 CLI 工具授权
+      if [ -n "$GH_TOKEN" ] && command -v gh &>/dev/null; then
+        echo "$GH_TOKEN" | gh auth login --with-token 2>/dev/null || true
+        gh auth setup-git 2>/dev/null || true
+      elif [ -n "$GITHUB_TOKEN" ] && command -v gh &>/dev/null; then
+        echo "$GITHUB_TOKEN" | gh auth login --with-token 2>/dev/null || true
+        gh auth setup-git 2>/dev/null || true
+      fi
 
-    if [ -n "$KAGGLE_USERNAME" ] && [ -n "$KAGGLE_KEY" ]; then
-      mkdir -p ~/.kaggle
-      cat << KAGGLE_EOF > ~/.kaggle/kaggle.json
+      if [ -n "$KAGGLE_USERNAME" ] && [ -n "$KAGGLE_KEY" ]; then
+        mkdir -p ~/.kaggle
+        cat << KAGGLE_EOF > ~/.kaggle/kaggle.json
 {"username":"$KAGGLE_USERNAME","key":"$KAGGLE_KEY"}
 KAGGLE_EOF
-      chmod 600 ~/.kaggle/kaggle.json
-      echo "$KAGGLE_KEY" > ~/.kaggle/access_token
-      chmod 600 ~/.kaggle/access_token
+        chmod 600 ~/.kaggle/kaggle.json
+        echo "$KAGGLE_KEY" > ~/.kaggle/access_token
+        chmod 600 ~/.kaggle/access_token
+      fi
+
+      [ -n "$CLOUDFLARE_API_TOKEN" ] && export CLOUDFLARE_API_TOKEN="$CLOUDFLARE_API_TOKEN"
+      [ -n "$CF_API_TOKEN" ] && export CLOUDFLARE_API_TOKEN="${CLOUDFLARE_API_TOKEN:-$CF_API_TOKEN}"
+      [ -n "$CF_ACCOUNT_ID" ] && export CLOUDFLARE_ACCOUNT_ID="${CLOUDFLARE_ACCOUNT_ID:-$CF_ACCOUNT_ID}"
+
+      echo "✅ [SUCCESS] 凭据解密成功，已载入当前沙箱环境与 /tmp/env.sh"
+    else
+      echo "⚠️ [WARNING] 凭据解密失败 (提供的密码不匹配)。跳过私有 Key 解密。"
+      echo "💡 本地算法、开源模型、公共工具链与 load_skill 全套生态仍将完整激活。"
+      echo "💡 若需重新解密，随时执行: bash $SCRIPT_DIR/init.sh \"[正确密码]\""
     fi
-
-    [ -n "$CLOUDFLARE_API_TOKEN" ] && export CLOUDFLARE_API_TOKEN="$CLOUDFLARE_API_TOKEN"
-    [ -n "$CF_API_TOKEN" ] && export CLOUDFLARE_API_TOKEN="${CLOUDFLARE_API_TOKEN:-$CF_API_TOKEN}"
-    [ -n "$CF_ACCOUNT_ID" ] && export CLOUDFLARE_ACCOUNT_ID="${CLOUDFLARE_ACCOUNT_ID:-$CF_ACCOUNT_ID}"
-
-    echo "✅ [SUCCESS] 凭据解密成功，已载入当前沙箱环境与 /tmp/env.sh"
-  else
-    echo "❌ [ERROR] 凭据解密失败！请检查输入的主密码是否正确。"
-    unset MASTER_KEY BOOTSTRAP_PASS CANDIDATE_KEYS input_pass _BOOTSTRAP_MEM_PASS cand
-    exit 1
   fi
 elif [ -f "/tmp/env.sh" ]; then
   set -a
@@ -255,7 +272,11 @@ export CHROME_PATH="${CHROME_PATH:-/usr/bin/google-chrome}"
 export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD="1"
 
 echo "================================================================="
-echo "🎉 沙箱环境已秒级就绪！核心凭证池已解密，load_skill 已全面激活。"
+if [ -f "/tmp/env.sh" ]; then
+  echo "🎉 沙箱环境已秒级就绪！核心凭证池已解密，load_skill 已全面激活。"
+else
+  echo "🎉 沙箱环境已秒级就绪！公共科研技能矩阵与 load_skill 调度器已全面就绪。"
+fi
 echo "💡 提示：容器重启后无需重新 git clone，仅需执行以下命令 0 秒唤醒："
 echo "   bash $SCRIPT_DIR/init.sh \"[主密码]\""
 echo "================================================================="
